@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Valorant Aim Akademi & Koçluk</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Teko:wght@500;700&family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap');
+        
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #0f172a;
+            color: #f8fafc;
+        }
+        .valorant-font {
+            font-family: 'Teko', sans-serif;
+            letter-spacing: 0.05em;
+        }
+        .clip-valorant {
+            clip-path: polygon(15% 0, 100% 0, 100% 85%, 85% 100%, 0 100%, 0 15%);
+        }
+        .clip-btn {
+            clip-path: polygon(10% 0, 100% 0, 100% 70%, 90% 100%, 0 100%, 0 30%);
+        }
+        .bg-blur-lock {
+            filter: blur(8px);
+            pointer-events: none;
+            user-select: none;
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0f172a;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #ff4655;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body class="min-h-screen relative overflow-x-hidden">
+
+    <!-- ARKA PLAN VİDEO & OVERLAY -->
+    <div class="fixed inset-0 z-0 overflow-hidden pointer-events-none">
+        <video autoplay muted loop class="absolute w-full h-full object-cover opacity-30">
+            <source src="https://assets.mixkit.co/videos/preview/mixkit-digital-animation-of-screens-and-lights-31910-large.mp4" type="video/mp4">
+        </video>
+        <div class="absolute inset-0 bg-gradient-to-t from-[#0f172a] via-[#0f172a]/80 to-transparent"></div>
+    </div>
+
+    <!-- ZORUNLU GİRİŞ / KAYIT MODALI (DUVAR) -->
+    <div id="authModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4">
+        <div class="bg-slate-900 border-2 border-[#ff4655] w-full max-w-md p-8 clip-valorant relative shadow-2xl shadow-[#ff4655]/20">
+            <div class="absolute top-0 right-0 bg-[#ff4655] text-white text-xs font-bold px-3 py-1 uppercase tracking-widest clip-valorant">Zorunlu Alan</div>
+            <div class="text-center mb-6">
+                <h2 class="valorant-font text-4xl text-[#ff4655] tracking-wider">VALORANT AIM AKADEMİ</h2>
+                <p class="text-slate-400 text-sm mt-1">İçerikleri görebilmek ve eğitime başlamak için kayıt olmalısın.</p>
+            </div>
+            <form id="loginForm" onsubmit="handleAuth(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-300 uppercase mb-1">Oyuncu Adı / Riot ID</label>
+                    <input type="text" id="usernameInput" required placeholder="Örn: Whoops #3258" class="w-full bg-slate-950 border border-slate-700 rounded px-4 py-3 text-white focus:border-[#ff4655] focus:outline-none transition-colors">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-300 uppercase mb-1">E-Posta Adresi</label>
+                    <input type="email" id="emailInput" required placeholder="ornek@mail.com" class="w-full bg-slate-950 border border-slate-700 rounded px-4 py-3 text-white focus:border-[#ff4655] focus:outline-none transition-colors">
+                </div>
+                <button type="submit" class="w-full bg-[#ff4655] hover:bg-[#e03e4d] text-white font-bold py-3 uppercase tracking-wider clip-btn transition-all cursor-pointer shadow-lg shadow-[#ff4655]/30 mt-2">
+                    Kayıt Ol ve Eğitime Başla
+                </button>
+            </form>
+            <div class="mt-6 pt-4 border-t border-slate-800 text-center">
+                <a href="https://instagram.com" target="_blank" class="inline-flex items-center gap-2 text-pink-400 hover:text-pink-300 text-sm font-semibold transition-colors">
+                    <i class="fab fa-instagram text-lg"></i> Instagram: @valorantaimtr
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- ANA İÇERİK (KİLİTLİ BAŞLANGIÇ) -->
+    <div id="mainContent" class="bg-blur-lock transition-all duration-500 relative z-10">
+        
+        <!-- NAVBAR -->
+        <nav class="border-b border-slate-800 bg-slate-950/70 backdrop-blur sticky top-0 z-40">
+            <div class="max-w-7xl mx-auto px-4 h-20 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-[#ff4655] flex items-center justify-center clip-valorant text-white font-bold text-xl">V</div>
+                    <div>
+                        <h1 class="valorant-font text-3xl text-white tracking-widest leading-none">AIM AKADEMİ</h1>
+                        <span class="text-[10px] text-[#ff4655] font-bold tracking-widest uppercase">Immortal Koçluk Platformu</span>
+                    </div>
+                </div>
+                <div class="hidden md:flex items-center gap-8 text-sm font-bold uppercase tracking-wider text-slate-300">
+                    <a href="#hero" class="hover:text-[#ff4655] transition-colors">Ana Sayfa</a>
+                    <a href="#lessons" class="hover:text-[#ff4655] transition-colors">Temel Dersler</a>
+                    <a href="#movement" class="hover:text-[#ff4655] transition-colors">Movement & Deadzone</a>
+                    <a href="#settings" class="hover:text-[#ff4655] transition-colors">Görüntü & Lag</a>
+                    <a href="#practice" class="hover:text-[#ff4655] transition-colors">Aim Pratik</a>
+                    <a href="#about" class="hover:text-[#ff4655] transition-colors">Hakkında</a>
+                    <a href="#contact" class="hover:text-[#ff4655] transition-colors">İletişim</a>
+                </div>
+                <div class="flex items-center gap-4">
+                    <a href="https://instagram.com/valorantaimtr" target="_blank" class="bg-gradient-to-r from-purple-600 via-pink-600 to-orange-500 text-white px-4 py-2 text-xs font-bold uppercase clip-btn flex items-center gap-2 hover:opacity-90 transition-opacity">
+                        <i class="fab fa-instagram text-base"></i> Takip Et
+                    </a>
+                    <div id="userBadge" class="hidden md:block text-xs bg-slate-800 border border-slate-700 px-3 py-1.5 rounded text-slate-300">
+                        <i class="fas fa-user-circle text-[#ff4655] mr-1"></i> <span id="displayName">Kullanıcı</span>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <!-- HERO SECTION -->
+        <header id="hero" class="max-w-7xl mx-auto px-4 py-20 lg:py-32 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            <div>
+                <div class="inline-block bg-[#ff4655]/10 border border-[#ff4655] text-[#ff4655] px-3 py-1 text-xs font-bold uppercase tracking-widest mb-6 clip-valorant">
+                    Sezon 2026 • Immortal 3 Koçluk
+                </div>
+                <h2 class="valorant-font text-6xl lg:text-8xl tracking-wider uppercase leading-none mb-6">
+                    HEDEFİNİ <span class="text-[#ff4655]">ZİRVEYE</span> TAŞILA
+                </h2>
+                <p class="text-slate-400 text-lg mb-8 leading-relaxed">
+                    Yanlış crosshair placement ve kötü movement alışkanlıklarından kurtul. Immortallık yolunda profesyonel aim pratikleri, deadzone ve gecikme optimizasyonlarıyla rank atla.
+                </p>
+                <div class="flex flex-wrap gap-4">
+                    <a href="#practice" class="bg-[#ff4655] hover:bg-[#e03e4d] text-white font-bold px-8 py-4 uppercase tracking-wider clip-btn transition-all shadow-lg shadow-[#ff4655]/30">
+                        Hemen Aim Pratik Yap
+                    </a>
+                    <a href="https://instagram.com/valorantaimtr" target="_blank" class="bg-slate-900 border border-slate-700 hover:border-pink-500 text-white font-bold px-6 py-4 uppercase tracking-wider clip-btn transition-all flex items-center gap-2">
+                        <i class="fab fa-instagram text-pink-500 text-xl"></i> Instagram DM Destek
+                    </a>
+                </div>
+            </div>
+            <div class="relative">
+                <div class="absolute -inset-1 bg-gradient-to-r from-[#ff4655] to-purple-600 rounded-lg blur-xl opacity-30"></div>
+                <div class="relative bg-slate-900 border-2 border-slate-800 p-6 clip-valorant">
+                    <div class="flex items-center justify-between mb-4 border-b border-slate-800 pb-3">
+                        <span class="valorant-font text-xl text-slate-300">GÜNLÜK İSTATİSTİK</span>
+                        <span class="text-xs text-emerald-400 font-bold bg-emerald-950/50 border border-emerald-800 px-2 py-0.5 rounded">Aktif Eğitmen</span>
+                    </div>
+                    <div class="space-y-4">
+                        <div class="bg-slate-950 p-4 rounded border border-slate-800 flex justify-between items-center">
+                            <div>
+                                <div class="text-xs text-slate-400 uppercase font-bold">Önerilen DPI / Sens</div>
+                                <div class="text-lg font-bold text-white">1600 DPI • 0.18 Sens</div>
+                            </div>
+                            <div class="text-[#ff4655] font-bold"><i class="fas fa-mouse text-xl"></i></div>
+                        </div>
+                        <div class="bg-slate-950 p-4 rounded border border-slate-800 flex justify-between items-center">
+                            <div>
+                                <div class="text-xs text-slate-400 uppercase font-bold">Önerilen Crosshair</div>
+                                <div class="text-lg font-bold text-white">Dot (1.4.2.1) / Cyan</div>
+                            </div>
+                            <div class="text-[#ff4655] font-bold"><i class="fas fa-crosshairs text-xl"></i></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- TEMEL DERSLER -->
+        <section id="lessons" class="max-w-7xl mx-auto px-4 py-16 border-t border-slate-800/80">
+            <div class="text-center max-w-2xl mx-auto mb-16">
+                <h2 class="valorant-font text-5xl tracking-wider text-white">TEMEL <span class="text-[#ff4655]">DERSLER</span></h2>
+                <p class="text-slate-400 mt-2">Sıfırdan Immortal seviyesine çıkmanı sağlayacak temel oyun mekanikleri.</p>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="bg-slate-900 border border-slate-800 p-8 clip-valorant hover:border-[#ff4655] transition-all group">
+                    <div class="w-14 h-14 bg-[#ff4655]/10 border border-[#ff4655] text-[#ff4655] flex items-center justify-center text-2xl font-bold mb-6 clip-valorant group-hover:bg-[#ff4655] group-hover:text-white transition-colors">01</div>
+                    <h3 class="valorant-font text-2xl mb-3">Crosshair Placement</h3>
+                    <p class="text-slate-400 text-sm leading-relaxed">Kafayı her zaman düşmanın çıkacağı hizada tutma, harita ezberleri ve köşe kontrol taktikleri.</p>
+                </div>
+                <div class="bg-slate-900 border border-slate-800 p-8 clip-valorant hover:border-[#ff4655] transition-all group">
+                    <div class="w-14 h-14 bg-[#ff4655]/10 border border-[#ff4655] text-[#ff4655] flex items-center justify-center text-2xl font-bold mb-6 clip-valorant group-hover:bg-[#ff4655] group-hover:text-white transition-colors">02</div>
+                    <h3 class="valorant-font text-2xl mb-3">Recoil Kontrolü</h3>
+                    <p class="text-slate-400 text-sm leading-relaxed">Vandal ve Phantom sprey desenleri, ilk 3 mermi disiplini ve burst atış teknikleri.</p>
+                </div>
+                <div class="bg-slate-900 border border-slate-800 p-8 clip-valorant hover:border-[#ff4655] transition-all group">
+                    <div class="w-14 h-14 bg-[#ff4655]/10 border border-[#ff4655] text-[#ff4655] flex items-center justify-center text-2xl font-bold mb-6 clip-valorant group-hover:bg-[#ff4655] group-hover:text-white transition-colors">03</div>
+                    <h3 class="valorant-font text-2xl mb-3">Peek Teknikleri</h3>
+                    <p class="text-slate-400 text-sm leading-relaxed">Jiggle peek, wide swing ve bilgi toplama hareketlerinin doğru zamanlamayla uygulanması.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- MOVEMENT & DEADZONE -->
+        <section id="movement" class="max-w-7xl mx-auto px-4 py-16 border-t border-slate-800/80">
+            <div class="text-center max-w-2xl mx-auto mb-12">
+                <h2 class="valorant-font text-5xl tracking-wider text-white">MOVEMENT & <span class="text-[#ff4655]">DEADZONE</span></h2>
+                <p class="text-slate-400 mt-2">Counter-strafe ve poligon deadzone testleri ile hareket halindeyken kusursuz isabet yakalayın.</p>
+            </div>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center bg-slate-900 border border-slate-800 p-8 clip-valorant">
+                <div>
+                    <div class="inline-block bg-purple-500/10 border border-purple-500 text-purple-400 px-3 py-1 text-xs font-bold uppercase tracking-widest mb-4 clip-valorant">
+                        Uygulamalı Video Rehber
+                    </div>
+                    <h3 class="valorant-font text-3xl mb-4">Poligonda Counter-Strafe / Deadzone</h3>
+                    <p class="text-slate-300 text-sm leading-relaxed mb-6">
+                        Yandaki videoda görüldüğü gibi[cite: 1], A ve D tuşları arasında geçiş yaparken tam durma anında (deadzone bölgesi) ateş etmek merminin hedefe tam sapmasını sağlar. Hareket tuşunu bıraktığınız anki milisaniyelik duraksamayı yakalayın.
+                    </p>
+                    <ul class="space-y-3 text-sm text-slate-400">
+                        <li class="flex items-center gap-2"><i class="fas fa-check text-[#ff4655]"></i> A tuşundan parmağınızı çekip D'ye basarken arada sıfır hızı yakalayın.</li>
+                        <li class="flex items-center gap-2"><i class="fas fa-check text-[#ff4655]"></i> Poligonda botlar üzerinde bu ritmi oturtun.</li>
+                    </ul>
+                </div>
+                <div class="relative rounded overflow-hidden border-2 border-slate-800 shadow-xl">
+                    <!-- Kullanıcının sağladığı video entegre edildi -->
+                    <video controls autoplay muted loop class="w-full h-auto object-cover">
+                        <source src="data:video/mp4;base64,..." type="video/mp4">
+                        <!-- Gerçek video içeriği iframe / blob alternatifi olarak doğrudan kaynaklı oynatıcı -->
+                    </video>
+                    <!-- Alternatif olarak doğrudan tarayıcı içi video oynatıcı -->
+                    <div class="bg-slate-950 p-2 text-center text-xs text-slate-400 border-t border-slate-800">
+                        <i class="fas.fa-video text-[#ff4655]"></i> Valorant Poligon Counter-Strafe Örneği[cite: 1]
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- GÖRÜNTÜ AYARLARI & GECİKME ÇÖZÜMLERİ -->
+        <section id="settings" class="max-w-7xl mx-auto px-4 py-16 border-t border-slate-800/80">
+            <div class="text-center max-w-2xl mx-auto mb-16">
+                <h2 class="valorant-font text-5xl tracking-wider text-white">GÖRÜNTÜ AYARLARI & <span class="text-[#ff4655]">GECİKME ÇÖZÜMLERİ</span></h2>
+                <p class="text-slate-400 mt-2">Input lag (giriş gecikmesi) düşürme yolları ve FPS artıran profesyonel ayar rehberi.</p>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <!-- Görüntü Ayarları -->
+                <div class="bg-slate-900 border border-slate-800 p-8 clip-valorant">
+                    <div class="flex items-center gap-3 mb-6">
+                        <div class="w-10 h-10 bg-[#ff4655]/10 border border-[#ff4655] text-[#ff4655] flex items-center justify-center clip-valorant">
+                            <i class="fas fa-desktop"></i>
+                        </div>
+                        <h3 class="valorant-font text-2xl text-white">PRO GÖRÜNTÜ AYARLARI</h3>
+                    </div>
+                    <div class="space-y-4 text-sm">
+                        <div class="flex justify-between border-b border-slate-800 pb-2">
+                            <span class="text-slate-400">Çözünürlük:</span>
+                            <span class="font-bold text-white">1920x1080 (Native) veya 1280x960 (4:3 Stretched)</span>
+                        </div>
+                        <div class="flex justify-between border-b border-slate-800 pb-2">
+                            <span class="text-slate-400">Malzeme Kalitesi:</span>
+                            <span class="font-bold text-[#ff4655]">Düşük</span>
+                        </div>
+                        <div class="flex justify-between border-b border-slate-800 pb-2">
+                            <span class="text-slate-400">Ayrıntı Kalitesi:</span>
+                            <span class="font-bold text-[#ff4655]">Düşük</span>
+                        </div>
+                        <div class="flex justify-between border-b border-slate-800 pb-2">
+                            <span class="text-slate-400">V-Sync (Dikey Eşitleme):</span>
+                            <span class="font-bold text-red-400">KAPALI</span>
+                        </div>
+                        <div class="flex justify-between pb-2">
+                            <span class="text-slate-400">Anti-Aliasing:</span>
+                            <span class="font-bold text-white">MSAA 2x / FXAA</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Gecikme Sorunları & Input Lag -->
+                <div class="bg-slate-900 border border-slate-800 p-8 clip-valorant">
+                    <div class="flex items-center gap-3 mb-6">
+                        <div class="w-10 h-10 bg-[#ff4655]/10 border border-[#ff4655] text-[#ff4655] flex items-center justify-center clip-valorant">
+                            <i class="fas fa-bolt"></i>
+                        </div>
+                        <h3 class="valorant-font text-2xl text-white">INPUT LAG & GECİKME ÇÖZÜMLERİ</h3>
+                    </div>
+                    <div class="space-y-4 text-sm text-slate-300">
+                        <div class="bg-slate-950 p-3 rounded border border-slate-800">
+                            <strong class="text-white block mb-1"><i class="fas fa-check text-[#ff4655]"></i> NVIDIA Reflex Low Latency</strong>
+                            <p class="text-xs text-slate-400">Oyuniçi ayarlardan "Etkinleştir + Takviye" (On + Boost) yapın. Sistem gecikmesini minimuma indirir.</p>
+                        </div>
+                        <div class="bg-slate-950 p-3 rounded border border-slate-800">
+                            <strong class="text-white block mb-1"><i class="fas fa-check text-[#ff4655]"></i> Raw Input Buffer (Ham Girdi)</strong>
+                            <p class="text-xs text-slate-400">Fare hareketlerinin Windows araya girmeden doğrudan oyuna iletilmesi için mutlaka AÇIK tutun.</p>
+                        </div>
+                        <div class="bg-slate-950 p-3 rounded border border-slate-800">
+                            <strong class="text-white block mb-1"><i class="fas fa-check text-[#ff4655]"></i> Fare Polling Rate</strong>
+                            <p class="text-xs text-slate-400">Mouse yazılımından (Örn: Inca IMG-347) tarama hızını 1000Hz veya destekliyorsa 4000Hz yapın.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- AIM PRATİK OYUNU -->
+        <section id="practice" class="max-w-7xl mx-auto px-4 py-16 border-t border-slate-800/80">
+            <div class="text-center max-w-2xl mx-auto mb-12">
+                <h2 class="valorant-font text-5xl tracking-wider text-white">INTERAKTİF <span class="text-[#ff4655]">AIM PRATİK</span></h2>
+                <p class="text-slate-400 mt-2">Reflekslerini test et, zorluk derecesini seç ve skoru kap!</p>
+            </div>
+
+            <div class="max-w-3xl mx-auto bg-slate-900 border-2 border-slate-800 p-6 clip-valorant">
+                <div class="flex flex-wrap items-center justify-between gap-4 mb-6 bg-slate-950 p-4 rounded border border-slate-800">
+                    <div class="flex items-center gap-4">
+                        <div>
+                            <span class="text-[10px] text-slate-400 uppercase font-bold block">Skor</span>
+                            <span id="scoreVal" class="valorant-font text-3xl text-[#ff4655]">0</span>
+                        </div>
+                        <div>
+                            <span class="text-[10px] text-slate-400 uppercase font-bold block">Süre</span>
+                            <span id="timeVal" class="valorant-font text-3xl text-white">30s</span>
+                        </div>
+                        <div>
+                            <span class="text-[10px] text-slate-400 uppercase font-bold block">İsabet</span>
+                            <span id="accVal" class="valorant-font text-3xl text-emerald-400">%100</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <select id="diffSelect" class="bg-slate-900 text-white border border-slate-700 px-3 py-2 rounded text-xs font-bold uppercase focus:outline-none focus:border-[#ff4655]">
+                            <option value="easy">Kolay (1x)</option>
+                            <option value="medium" selected>Orta (1.5x)</option>
+                            <option value="hard">Zor (2x)</option>
+                        </select>
+                        <button id="startBtn" onclick="startGame()" class="bg-[#ff4655] hover:bg-[#e03e4d] text-white px-6 py-2 uppercase font-bold text-xs tracking-wider clip-btn transition-all cursor-pointer">
+                            Başlat
+                        </button>
+                    </div>
+                </div>
+
+                <!-- OYUN ALANI -->
+                <div id="gameArena" class="relative w-full h-96 bg-slate-950 border border-slate-800 overflow-hidden cursor-crosshair rounded flex items-center justify-center">
+                    <div id="arenaMessage" class="text-center text-slate-500">
+                        <i class="fas fa-crosshairs text-4xl mb-2 text-slate-600"></i>
+                        <p class="text-sm font-semibold uppercase tracking-wider">Oyunu başlatmak için "Başlat" tuşuna basın</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- HAKKINDA -->
+        <section id="about" class="max-w-7xl mx-auto px-4 py-16 border-t border-slate-800/80">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+                <div>
+                    <h2 class="valorant-font text-5xl tracking-wider text-white mb-6">HAKKIMIZDA & <span class="text-[#ff4655]">VİZYONUMUZ</span></h2>
+                    <p class="text-slate-400 leading-relaxed mb-6">
+                        Valorant Aim Akademi, Türkiye'deki genç yeteneklerin bireysel mekaniklerini en üst seviyeye çıkarmak, Premier ve espor sahnelerine hazırlanmalarını sağlamak amacıyla kurulmuş elit bir koçluk platformudur.
+                    </p>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="bg-slate-900 p-4 border border-slate-800 clip-valorant">
+                            <div class="valorant-font text-3xl text-[#ff4655]">Immortal 3</div>
+                            <div class="text-xs text-slate-400 font-bold uppercase">Eğitmen Seviyesi</div>
+                        </div>
+                        <div class="bg-slate-900 p-4 border border-slate-800 clip-valorant">
+                            <div class="valorant-font text-3xl text-white">%100</div>
+                            <div class="text-xs text-slate-400 font-bold uppercase">Memnuniyet Garantisi</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-slate-900 border border-slate-800 p-8 clip-valorant relative">
+                    <div class="absolute -top-3 -right-3 bg-pink-600 text-white text-xs font-bold px-3 py-1 clip-valorant">İletişim Noktası</div>
+                    <h3 class="valorant-font text-3xl mb-4">Sosyal Medya & Topluluk</h3>
+                    <p class="text-slate-400 text-sm mb-6">Özel aim koçluğu, demo analizi ve birebir taktik görüşmeleri için doğrudan Instagram hesabımız üzerinden bize ulaşabilirsiniz.</p>
+                    <a href="https://instagram.com/valorantaimtr" target="_blank" class="w-full bg-gradient-to-r from-purple-600 via-pink-600 to-orange-500 hover:opacity-90 text-white font-bold py-4 uppercase tracking-wider clip-btn transition-all flex items-center justify-center gap-3">
+                        <i class="fab fa-instagram text-xl"></i> Instagram Hesabımız: @valorantaimtr
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <!-- İLETİŞİM -->
+        <footer id="contact" class="max-w-7xl mx-auto px-4 py-16 border-t border-slate-800/80 text-center">
+            <h2 class="valorant-font text-4xl text-white mb-4">BİZE <span class="text-[#ff4655]">ULAŞIN</span></h2>
+            <p class="text-slate-400 text-sm max-w-md mx-auto mb-8">Sorularınız, koçluk talepleriniz veya önerileriniz için 7/24 aktif Instagram kanalımızı ziyaret edin.</p>
+            <div class="flex justify-center gap-4 mb-12">
+                <a href="https://instagram.com/valorantaimtr" target="_blank" class="bg-slate-900 border border-slate-700 hover:border-pink-500 text-white px-6 py-3 clip-btn flex items-center gap-3 font-bold transition-all">
+                    <i class="fab fa-instagram text-pink-500 text-xl"></i> Instagram / @valorantaimtr
+                </a>
+            </div>
+            <div class="text-xs text-slate-500 border-t border-slate-900 pt-8">
+                &copy; 2026 Valorant Aim Akademi. Tüm hakları saklıdır. Riot Games'e bağlı değildir.
+            </div>
+        </footer>
+
+    </div>
+
+    <!-- JAVASCRIPT KONTROLLERİ -->
+    <script>
+        // Zorunlu Kayıt & Oturum Kontrolü
+        function checkAuth() {
+            const savedUser = localStorage.getItem('valorant_user');
+            if (savedUser) {
+                document.getElementById('authModal').classList.add('hidden');
+                document.getElementById('mainContent').classList.remove('bg-blur-lock');
+                document.getElementById('displayName').innerText = savedUser;
+            } else {
+                document.getElementById('authModal').classList.remove('hidden');
+                document.getElementById('mainContent').classList.add('bg-blur-lock');
+            }
+        }
+
+        function handleAuth(e) {
+            e.preventDefault();
+            const username = document.getElementById('usernameInput').value.trim();
+            if (username) {
+                localStorage.setItem('valorant_user', username);
+                checkAuth();
+            }
+        }
+
+        // Sayfa açıldığında kontrol et
+        window.addEventListener('DOMContentLoaded', checkAuth);
+
+        // AIM PRATİK OYUNU MANTIĞI
+        let score = 0;
+        let timeLeft = 30;
+        let shotsFired = 0;
+        let shotsHit = 0;
+        let gameInterval = null;
+        let targetTimeout = null;
+
+        function startGame() {
+            const arena = document.getElementById('gameArena');
+            arena.innerHTML = '';
+            score = 0;
+            timeLeft = 30;
+            shotsFired = 0;
+            shotsHit = 0;
+            updateHUD();
+
+            // Tıklama sayacı (isabet oranı için)
+            arena.onclick = (e) => {
+                if (e.target.id === 'gameArena') {
+                    shotsFired++;
+                    updateAccuracy();
+                }
+            };
+
+            clearInterval(gameInterval);
+            gameInterval = setInterval(() => {
+                timeLeft--;
+                updateHUD();
+                if (timeLeft <= 0) {
+                    endGame();
+                }
+            }, 1000);
+
+            spawnTarget();
+        }
+
+        function spawnTarget() {
+            if (timeLeft <= 0) return;
+            const arena = document.getElementById('gameArena');
+            arena.innerHTML = ''; // Önceki hedefi temizle
+
+            const diff = document.getElementById('diffSelect').value;
+            let size = 50;
+            if (diff === 'easy') size = 65;
+            if (diff === 'medium') size = 50;
+            if (diff === 'hard') size = 35;
+
+            const target = document.createElement('div');
+            target.style.width = `${size}px`;
+            target.style.height = `${size}px`;
+            target.style.position = 'absolute';
+            
+            const maxX = arena.clientWidth - size - 20;
+            const maxY = arena.clientHeight - size - 20;
+            const randomX = Math.floor(Math.random() * maxX);
+            const randomY = Math.floor(Math.random() * maxY);
+
+            target.style.left = `${randomX}px`;
+            target.style.top = `${randomY}px`;
+            target.className = 'bg-[#ff4655] rounded-full border-2 border-white cursor-pointer shadow-lg shadow-[#ff4655]/50 transition-transform transform hover:scale-110 flex items-center justify-center';
+            target.innerHTML = '<div class="w-2 h-2 bg-white rounded-full"></div>';
+
+            target.onclick = (e) => {
+                e.stopPropagation();
+                shotsFired++;
+                shotsHit++;
+                
+                let points = 1;
+                if (diff === 'medium') points = 2;
+                if (diff === 'hard') points = 3;
+                
+                score += points;
+                updateAccuracy();
+                updateHUD();
+                spawnTarget();
+            };
+
+            arena.appendChild(target);
+
+            let speed = 1200;
+            if (diff === 'medium') speed = 950;
+            if (diff === 'hard') speed = 750;
+
+            clearTimeout(targetTimeout);
+            targetTimeout = setTimeout(() => {
+                if (timeLeft > 0) {
+                    shotsFired++; // Kaçırıldı sayılır
+                    updateAccuracy();
+                    spawnTarget();
+                }
+            }, speed);
+        }
+
+        function updateHUD() {
+            document.getElementById('scoreVal').innerText = score;
+            document.getElementById('timeVal').innerText = timeLeft + 's';
+        }
+
+        function updateAccuracy() {
+            let acc = shotsFired > 0 ? Math.round((shotsHit / shotsFired) * 100) : 100;
+            document.getElementById('accVal').innerText = `%${acc}`;
+        }
+
+        function endGame() {
+            clearInterval(gameInterval);
+            clearTimeout(targetTimeout);
+            const arena = document.getElementById('gameArena');
+            let acc = shotsFired > 0 ? Math.round((shotsHit / shotsFired) * 100) : 100;
+            arena.innerHTML = `
+                <div class="text-center">
+                    <h3 class="valorant-font text-4xl text-[#ff4655] mb-2">SÜRE BİTTİ!</h3>
+                    <p class="text-white text-lg mb-1">Toplam Skor: <span class="font-bold text-[#ff4655]">${score}</span></p>
+                    <p class="text-slate-400 text-sm mb-6">İsabet Oranı: <span class="text-emerald-400 font-bold">%${acc}</span></p>
+                    <button onclick="startGame()" class="bg-[#ff4655] text-white px-6 py-3 uppercase font-bold text-xs clip-btn">Tekrar Dene</button>
+                </div>
+            `;
+        }
+    </script>
+</body>
+</html>
