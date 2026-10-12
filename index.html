@@ -3,182 +3,572 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Valorant Aim Akademi & Koçluk</title>
+    <title>Valorant Aim & Sosyal Akademi (Eksiksiz Sistem)</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Teko:wght@500;700&family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap');
-        
-        body {
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            background-color: #0f172a;
-            color: #f8fafc;
-        }
-        .valorant-font {
-            font-family: 'Teko', sans-serif;
-            letter-spacing: 0.05em;
-        }
-        .clip-valorant {
-            clip-path: polygon(15% 0, 100% 0, 100% 85%, 85% 100%, 0 100%, 0 15%);
-        }
-        .clip-btn {
-            clip-path: polygon(10% 0, 100% 0, 100% 70%, 90% 100%, 0 100%, 0 30%);
-        }
-        .bg-blur-lock {
-            filter: blur(8px);
-            pointer-events: none;
-            user-select: none;
-        }
-        ::-webkit-scrollbar {
-            width: 8px;
-        }
-        ::-webkit-scrollbar-track {
-            background: #0f172a;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #ff4655;
-            border-radius: 4px;
-        }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #080c14; color: #f8fafc; }
+        .val-font { font-family: 'Teko', sans-serif; letter-spacing: 0.05em; }
+        .clip-val { clip-path: polygon(12% 0, 100% 0, 100% 88%, 88% 100%, 0 100%, 0 12%); }
+        .clip-btn { clip-path: polygon(10% 0, 100% 0, 100% 70%, 90% 100%, 0 100%, 0 30%); }
+        .scope-overlay { background: radial-gradient(circle at center, transparent 20%, rgba(0, 0, 0, 0.95) 50%, black 100%); border: 3px solid rgba(255, 70, 85, 0.8); }
+        .bg-blur-lock { filter: blur(8px); pointer-events: none; user-select: none; }
     </style>
 </head>
 <body class="min-h-screen relative overflow-x-hidden">
 
-    <!-- ARKA PLAN VİDEO DÖNGÜSÜ -->
-    <div class="fixed inset-0 z-0 overflow-hidden pointer-events-none">
-        <video autoplay muted loop playsinline class="absolute w-full h-full object-cover opacity-25">
-            <source src="https://assets.mixkit.co/videos/preview/mixkit-digital-animation-of-screens-and-lights-31910-large.mp4" type="video/mp4">
-        </video>
-        <div class="absolute inset-0 bg-gradient-to-t from-[#0f172a] via-[#0f172a]/85 to-[#0f172a]/70"></div>
+    <!-- BAN MODAL (CEZA EKRANI) -->
+    <div id="banModal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black/95 backdrop-blur-md p-4">
+        <div class="bg-red-950/90 border-2 border-red-600 w-full max-w-md p-6 clip-val text-center shadow-2xl">
+            <i class="fas fa-shield-virus text-6xl text-red-500 mb-3 animate-bounce"></i>
+            <h2 class="val-font text-4xl text-white">CEZA ALDINIZ (HWID / BAN)</h2>
+            <p class="text-xs text-red-300 my-2">Hesabınız ve cihazınız kuralları ihlal ettiği için engellendi.</p>
+            <div id="banTimer" class="bg-slate-900/90 p-4 rounded border border-red-500/50 text-sm font-bold text-amber-400 my-4">Süre Yükleniyor...</div>
+        </div>
     </div>
 
-    <!-- ZORUNLU GİRİŞ / KAYIT MODALI (DUVAR) -->
-    <div id="authModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md p-4">
-        <div class="bg-slate-900 border-2 border-[#ff4655] w-full max-w-md p-8 clip-valorant relative shadow-2xl shadow-[#ff4655]/20">
-            <div class="absolute top-0 right-0 bg-[#ff4655] text-white text-xs font-bold px-3 py-1 uppercase tracking-widest clip-valorant">Zorunlu Alan</div>
-            <div class="text-center mb-6">
-                <h2 class="valorant-font text-4xl text-[#ff4655] tracking-wider">VALORANT AIM AKADEMİ</h2>
-                <p class="text-slate-400 text-sm mt-1">Elinde Vandal ile antrenmana başlamak için kayıt olmalısın.</p>
-            </div>
-            <form id="loginForm" onsubmit="handleAuth(event)" class="space-y-4">
-                <div>
-                    <label class="block text-xs font-bold text-slate-300 uppercase mb-1">Oyuncu Adı / Riot ID</label>
-                    <input type="text" id="usernameInput" required placeholder="Örn: Whoops #3258" class="w-full bg-slate-950 border border-slate-700 rounded px-4 py-3 text-white focus:border-[#ff4655] focus:outline-none transition-colors">
+    <!-- KAYIT / GİRİŞ MODALI -->
+    <div id="authModal" class="fixed inset-0 z-40 flex items-center justify-center bg-black/95 backdrop-blur-md p-4">
+        <div class="bg-slate-900 border-2 border-[#ff4655] w-full max-w-md p-6 clip-val relative shadow-2xl">
+            
+            <!-- GİRİŞ VE KAYIT FORMU -->
+            <div id="authFormContainer">
+                <div class="text-center mb-4">
+                    <div class="inline-block bg-[#ff4655]/20 border border-[#ff4655] text-[#ff4655] text-[10px] font-bold px-3 py-1 clip-val uppercase mb-2">Giriş Kapısı</div>
+                    <h2 class="val-font text-4xl text-[#ff4655] leading-none">VALORANT AKADEMİ</h2>
+                    <p class="text-amber-400 text-xs font-semibold mt-2">"Hoş geldin Berat! Burası sana göre, tek kural ihlal etme yeter."</p>
                 </div>
-                <div>
-                    <label class="block text-xs font-bold text-slate-300 uppercase mb-1">E-Posta Adresi</label>
-                    <input type="email" id="emailInput" required placeholder="ornek@mail.com" class="w-full bg-slate-950 border border-slate-700 rounded px-4 py-3 text-white focus:border-[#ff4655] focus:outline-none transition-colors">
+
+                <form onsubmit="handleLogin(event)" class="space-y-3">
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-300 uppercase mb-1">Riot ID / Oyuncu Adı</label>
+                        <input type="text" id="userInput" required placeholder="Örn: Whoops #3258" class="w-full bg-slate-950 border border-slate-700 rounded px-3 py-2 text-xs text-white focus:outline-none focus:border-[#ff4655]">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-300 uppercase mb-1">Valorant Rankın</label>
+                        <select id="rankInput" required class="w-full bg-slate-950 border border-slate-700 rounded px-3 py-2 text-xs text-white">
+                            <option value="Immortal 3">👑 Immortal 3</option>
+                            <option value="Radiant">🔥 Radiant</option>
+                            <option value="Ascendant">💎 Ascendant</option>
+                            <option value="Diamond">🔹 Diamond</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-300 uppercase mb-1">Şifre</label>
+                        <input type="password" id="passInput" oninput="checkPasswordStrength(this.value)" required placeholder="Güçlü bir şifre girin" class="w-full bg-slate-950 border border-slate-700 rounded px-3 py-2 text-xs text-white focus:outline-none">
+                        <div class="mt-1 flex items-center gap-2">
+                            <div class="flex-1 h-1 bg-slate-800 rounded overflow-hidden">
+                                <div id="passStrengthBar" class="h-full w-0 transition-all"></div>
+                            </div>
+                            <span id="passStrengthText" class="text-[9px] text-slate-500 font-bold">Güçlük: -</span>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-between items-center text-[10px]">
+                        <button type="button" onclick="showResetPasswordModal()" class="text-amber-400 hover:underline">Şifremi Unuttum?</button>
+                    </div>
+
+                    <div class="bg-slate-950 p-3 rounded border border-slate-800 flex items-center justify-between">
+                        <label class="flex items-center gap-3 cursor-pointer">
+                            <input type="checkbox" id="captchaCheck" required class="w-5 h-5 accent-[#ff4655]">
+                            <span class="text-xs text-slate-300 font-bold">Ben robot değilim</span>
+                        </label>
+                        <i class="fas fa-robot text-slate-600 text-lg"></i>
+                    </div>
+
+                    <button type="submit" class="w-full bg-[#ff4655] hover:bg-[#e03e4d] text-white font-bold py-2.5 uppercase text-xs clip-btn cursor-pointer">
+                        Kayıt Ol ve Giriş Yap
+                    </button>
+                </form>
+
+                <div class="my-3 flex items-center gap-2">
+                    <div class="flex-1 h-px bg-slate-800"></div>
+                    <span class="text-[10px] text-slate-500 font-bold">VEYA</span>
+                    <div class="flex-1 h-px bg-slate-800"></div>
                 </div>
-                <button type="submit" class="w-full bg-[#ff4655] hover:bg-[#e03e4d] text-white font-bold py-3 uppercase tracking-wider clip-btn transition-all cursor-pointer shadow-lg shadow-[#ff4655]/30 mt-2">
-                    Kayıt Ol ve Giriş Yap
+
+                <button onclick="loginAsGuest()" class="w-full bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold py-2 uppercase text-xs clip-btn border border-slate-600 cursor-pointer">
+                    <i class="fas fa-user-secret mr-1 text-purple-400"></i> Misafir Olarak Giriş Yap
                 </button>
-            </form>
-            <div class="mt-6 pt-4 border-t border-slate-800 text-center">
-                <a href="https://instagram.com/valorantaimtr" target="_blank" class="inline-flex items-center gap-2 text-pink-400 hover:text-pink-300 text-sm font-semibold transition-colors">
-                    <i class="fab fa-instagram text-lg"></i> Instagram: @valorantaimtr
-                </a>
+            </div>
+
+            <!-- SMS İLE ŞİFRE SIFIRLAMA MODALI -->
+            <div id="resetPasswordContainer" class="hidden space-y-3">
+                <h3 class="val-font text-3xl text-amber-400 text-center">SMS İLE ŞİFRE SIFIRLAMA</h3>
+                <p class="text-xs text-slate-400 text-center mb-2">Telefon numaranızı girin, size doğrulama kodu gönderelim.</p>
+                
+                <div id="smsStep1" class="space-y-3">
+                    <input type="tel" id="resetPhone" placeholder="Telefon No: 05XX XXX XX XX" class="w-full bg-slate-950 border border-slate-700 rounded px-3 py-2 text-xs text-white">
+                    <button onclick="sendSmsCode()" class="w-full bg-amber-500 text-black font-bold py-2 text-xs clip-btn">SMS Kodu Gönder</button>
+                </div>
+
+                <div id="smsStep2" class="hidden space-y-3">
+                    <div class="bg-emerald-500/20 text-emerald-400 p-2 rounded text-[11px] text-center font-bold">
+                        ✓ SMS Kodu Gönderildi! (Simülasyon Kodu: <span id="generatedCodeDisplay" class="text-white underline">123456</span>)
+                    </div>
+                    <input type="text" id="smsCodeInput" placeholder="6 Haneli Kodu Girin" class="w-full bg-slate-950 border border-slate-700 rounded px-3 py-2 text-xs text-white">
+                    <input type="password" id="newPasswordInput" placeholder="Yeni Şifreniz" class="w-full bg-slate-950 border border-slate-700 rounded px-3 py-2 text-xs text-white">
+                    <button onclick="verifyAndResetPassword()" class="w-full bg-emerald-600 text-white font-bold py-2 text-xs clip-btn">Şifreyi Güncelle</button>
+                </div>
+
+                <button onclick="hideResetPasswordModal()" class="w-full text-slate-400 hover:text-white text-xs mt-2">Geri Dön</button>
+            </div>
+
+            <div class="mt-4 pt-3 border-t border-slate-800/80 text-center">
+                <span class="inline-flex items-center gap-1.5 bg-slate-950 px-3 py-1 rounded-full border border-emerald-500/30 text-[10px] font-bold text-emerald-400">
+                    <i class="fas fa-shield-alt text-emerald-400"></i> Bu web sitesi WVB Güvenlik Protokolü ile korunmaktadır.
+                </span>
             </div>
         </div>
     </div>
 
-    <!-- ANA İÇERİK -->
-    <div id="mainContent" class="bg-blur-lock transition-all duration-500 relative z-10">
-        
-        <!-- NAVBAR -->
-        <nav class="border-b border-slate-800 bg-slate-950/80 backdrop-blur sticky top-0 z-40">
-            <div class="max-w-7xl mx-auto px-4 h-20 flex items-center justify-between">
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 bg-[#ff4655] flex items-center justify-center clip-valorant text-white font-bold text-xl">V</div>
-                    <div>
-                        <h1 class="valorant-font text-3xl text-white tracking-widest leading-none">AIM AKADEMİ</h1>
-                        <span class="text-[10px] text-[#ff4655] font-bold tracking-widest uppercase">Immortal Koçluk Platformu</span>
-                    </div>
-                </div>
-                <div class="hidden lg:flex items-center gap-5 text-sm font-bold uppercase tracking-wider text-slate-300">
-                    <a href="#hero" class="hover:text-[#ff4655] transition-colors">Ana Sayfa</a>
-                    <a href="#lessons" class="hover:text-[#ff4655] transition-colors">Dersler</a>
-                    <a href="#nvidia" class="hover:text-[#ff4655] transition-colors">NVIDIA Renk</a>
-                    <a href="#practice" class="hover:text-[#ff4655] transition-colors text-[#ff4655]">Aim Bot & Vandal</a>
-                    <a href="#contact" class="hover:text-[#ff4655] transition-colors">İletişim</a>
-                </div>
-                <div class="flex items-center gap-4">
-                    <div class="bg-slate-900 border border-amber-500/50 px-3 py-1.5 rounded flex items-center gap-2">
-                        <i class="fas fa-coins text-amber-400"></i>
-                        <span class="text-xs font-bold text-white"><span id="vpVal">0</span> VP</span>
-                    </div>
-                    <a href="https://instagram.com/valorantaimtr" target="_blank" class="bg-gradient-to-r from-purple-600 via-pink-600 to-orange-500 text-white px-4 py-2 text-xs font-bold uppercase clip-btn flex items-center gap-2 hover:opacity-95">
-                        <i class="fab fa-instagram text-base"></i> Instagram
-                    </a>
-                </div>
+    <!-- MAIN NAVBAR -->
+    <nav class="border-b border-slate-800 bg-slate-950/90 backdrop-blur sticky top-0 z-30 px-6 py-3">
+        <div class="max-w-7xl mx-auto flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-9 h-9 bg-[#ff4655] flex items-center justify-center clip-val text-white font-bold text-lg">V</div>
+                <h1 class="val-font text-3xl text-white">AIM AKADEMİ</h1>
             </div>
-        </nav>
+            <div class="hidden lg:flex gap-5 text-xs font-bold uppercase text-slate-300">
+                <a href="#practice" class="text-[#ff4655]">3D Poligon</a>
+                <a href="#leaderboard" class="text-amber-400">Liderlik Tablosu</a>
+                <a href="#chat" class="text-purple-400">Sohbet & Sosyal</a>
+                <a href="#admin" class="text-red-400">Admin Paneli</a>
+                <a href="#nvidia" class="text-[#76b900]">NVIDIA Renk</a>
+            </div>
+            <div class="flex items-center gap-3">
+                <a href="https://instagram.com/valorantaimtr" target="_blank" class="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-3 py-1.5 text-xs font-bold uppercase clip-btn flex items-center gap-1.5">
+                    <i class="fab fa-instagram"></i> Instagram
+                </a>
+                <div id="statusIndicator" class="flex items-center gap-1.5 bg-slate-900 px-3 py-1.5 rounded border border-slate-800 text-xs font-bold">
+                    <span id="statusDot" class="w-2.5 h-2.5 rounded-full bg-gray-500"></span>
+                    <span id="userHeader" class="text-slate-400">● Çevrimdışı</span>
+                </div>
+                <button onclick="localStorage.clear(); location.reload();" class="bg-slate-900 text-slate-400 hover:text-white px-3 py-1.5 text-xs font-bold rounded border border-slate-700 clip-btn">Çıkış</button>
+            </div>
+        </div>
+    </nav>
 
-        <!-- HERO SECTION -->
-        <header id="hero" class="max-w-7xl mx-auto px-4 py-20 lg:py-32 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-            <div>
-                <div class="inline-block bg-[#ff4655]/10 border border-[#ff4655] text-[#ff4655] px-3 py-1 text-xs font-bold uppercase tracking-widest mb-6 clip-valorant">
-                    Sezon 2026 • 1. Şahıs Vandal Deneyimi
+    <!-- ANA İÇERİK CONTAINER -->
+    <div id="mainContent" class="bg-blur-lock transition-all duration-500 max-w-7xl mx-auto px-4 py-8 space-y-12">
+
+        <!-- 3D POLİGON ARENASI -->
+        <section id="practice" class="bg-slate-900 border border-slate-800 p-6 clip-val relative">
+            <div class="flex flex-wrap justify-between items-center mb-4 gap-4">
+                <div>
+                    <h2 class="val-font text-4xl text-white">GERÇEKÇİ 3D <span class="text-[#ff4655]">POLİGON ARENASI</span></h2>
+                    <p class="text-xs text-slate-400">Bot zorluklarını seçin ve reflekslerinizi test edin!</p>
                 </div>
-                <h2 class="valorant-font text-6xl lg:text-8xl tracking-wider uppercase leading-none mb-6">
-                    HEDEFİNİ <span class="text-[#ff4655]">ZİRVEYE</span> TAŞILA
-                </h2>
-                <p class="text-slate-400 text-lg mb-8 leading-relaxed">
-                    Poligon ekranında birinci şahıs (first-person) elinde Vandal ile nişan al, botları vurdukça Kaos sesi eşliğinde +100 VP kazan!
-                </p>
-                <div class="flex flex-wrap gap-4">
-                    <a href="#practice" class="bg-[#ff4655] hover:bg-[#e03e4d] text-white font-bold px-8 py-4 uppercase tracking-wider clip-btn transition-all shadow-lg shadow-[#ff4655]/30">
-                        Vandal ile Antrenmana Başla
-                    </a>
+                <div class="flex gap-2">
+                    <button onclick="toggleBuyMenu()" class="bg-emerald-600 text-white px-3 py-1.5 text-xs font-bold uppercase clip-btn cursor-pointer">V - Silah Mağazası</button>
+                    <button onclick="toggleFullscreen()" class="bg-purple-600 text-white px-3 py-1.5 text-xs font-bold uppercase clip-btn cursor-pointer">Tam Ekran</button>
                 </div>
             </div>
-            <div class="relative">
-                <div class="absolute -inset-1 bg-gradient-to-r from-[#ff4655] to-purple-600 rounded-lg blur-xl opacity-30"></div>
-                <div class="relative bg-slate-900 border-2 border-slate-800 p-6 clip-valorant text-center">
-                    <div class="valorant-font text-2xl text-purple-400 mb-2">1. ŞAHIS VANDAL MODÜLÜ</div>
-                    <div class="bg-slate-950 p-4 rounded border border-slate-800 text-xs text-slate-300">
-                        <i class="fas fa-crosshairs text-[#ff4655] text-2xl mb-2 block"></i>
-                        Ekranın sağ alt köşesinde aktif 3D Vandal namlu ve gövde tasarımı.
+
+            <!-- BOT AYARLARI -->
+            <div class="bg-slate-950 p-3 rounded border border-slate-800 grid grid-cols-1 md:grid-cols-3 gap-3 mb-4 text-xs">
+                <div>
+                    <label class="block font-bold text-slate-400 mb-1">Bot Zorluk Seviyesi</label>
+                    <select id="botDifficulty" class="w-full bg-slate-900 border border-slate-700 text-white p-2 rounded">
+                        <option value="easy">Kolay (Yavaş Yok Olma)</option>
+                        <option value="medium" selected>Orta (Normal Refleks)</option>
+                        <option value="hard">Zor (Işık Hızı / Pro)</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block font-bold text-slate-400 mb-1">Bot Hareket Modu</label>
+                    <select id="botMovement" class="w-full bg-slate-900 border border-slate-700 text-white p-2 rounded">
+                        <option value="mix" selected>Karışık (Hareketli + Sabit)</option>
+                        <option value="moving">Sadece Sağa-Sola Yürüyen</option>
+                        <option value="static">Sadece Sabit Hedefler</option>
+                    </select>
+                </div>
+                <div class="flex items-end">
+                    <button onclick="startTraining()" class="w-full bg-[#ff4655] hover:bg-[#e03e4d] text-white font-bold py-2 uppercase clip-btn cursor-pointer">
+                        Antrenmanı Başlat
+                    </button>
+                </div>
+            </div>
+
+            <!-- 3D KANVAS VE ARENA -->
+            <div id="gameArena" onmousemove="handleLook(event)" oncontextmenu="toggleScope(event)" class="relative w-full h-[550px] bg-slate-950 border border-slate-800 rounded overflow-hidden select-none cursor-crosshair">
+                
+                <!-- BUY MENU -->
+                <div id="buyMenu" class="absolute inset-0 bg-black/80 backdrop-blur-sm hidden z-40 flex items-center justify-center">
+                    <div class="bg-slate-900 border border-emerald-500 p-6 clip-val text-center max-w-sm w-full">
+                        <h3 class="val-font text-3xl text-emerald-400 mb-4">SİLAH MAĞAZASI</h3>
+                        <div class="grid grid-cols-2 gap-2 text-xs mb-4">
+                            <button onclick="selectGun('vandal')" class="bg-slate-950 border border-slate-700 p-3 text-white font-bold hover:border-emerald-500">Kaos Vandal</button>
+                            <button onclick="selectGun('phantom')" class="bg-slate-950 border border-slate-700 p-3 text-white font-bold hover:border-emerald-500">Phantom</button>
+                            <button onclick="selectGun('operator')" class="bg-slate-950 border border-slate-700 p-3 text-white font-bold hover:border-emerald-500">Operator</button>
+                            <button onclick="selectGun('sheriff')" class="bg-slate-950 border border-slate-700 p-3 text-white font-bold hover:border-emerald-500">Sheriff</button>
+                        </div>
+                        <button onclick="toggleBuyMenu()" class="bg-emerald-600 text-white px-4 py-2 text-xs font-bold clip-btn">Kapat</button>
                     </div>
                 </div>
-            </div>
-        </header>
 
-        <!-- TEMEL DERSLER -->
-        <section id="lessons" class="max-w-7xl mx-auto px-4 py-16 border-t border-slate-800/80">
-            <div class="text-center max-w-2xl mx-auto mb-16">
-                <h2 class="valorant-font text-5xl tracking-wider text-white">TEMEL <span class="text-[#ff4655]">DERSLER</span></h2>
-                <p class="text-slate-400 mt-2">Sıfırdan Immortal seviyesine çıkmanı sağlayacak temel oyun mekanikleri.</p>
-            </div>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                <div class="bg-slate-900 border border-slate-800 p-8 clip-valorant hover:border-[#ff4655] transition-all group">
-                    <div class="w-14 h-14 bg-[#ff4655]/10 border border-[#ff4655] text-[#ff4655] flex items-center justify-center text-2xl font-bold mb-6 clip-valorant group-hover:bg-[#ff4655] group-hover:text-white transition-colors">01</div>
-                    <h3 class="valorant-font text-2xl mb-3">Crosshair Placement</h3>
-                    <p class="text-slate-400 text-sm leading-relaxed">Kafayı her zaman düşmanın çıkacağı hizada tutma ve köşe kontrolü.</p>
+                <!-- DÜRBÜN KAPLAMASI -->
+                <div id="scopeOverlay" class="absolute inset-0 hidden pointer-events-none z-30 scope-overlay flex items-center justify-center">
+                    <div class="w-full h-0.5 bg-red-500/80 absolute"></div>
+                    <div class="h-full w-0.5 bg-red-500/80 absolute"></div>
                 </div>
-                <div class="bg-slate-900 border border-slate-800 p-8 clip-valorant hover:border-[#ff4655] transition-all group">
-                    <div class="w-14 h-14 bg-[#ff4655]/10 border border-[#ff4655] text-[#ff4655] flex items-center justify-center text-2xl font-bold mb-6 clip-valorant group-hover:bg-[#ff4655] group-hover:text-white transition-colors">02</div>
-                    <h3 class="valorant-font text-2xl mb-3">Recoil Kontrolü</h3>
-                    <p class="text-slate-400 text-sm leading-relaxed">Vandal ve Phantom sprey desenleri ve ilk mermi disiplini.</p>
+
+                <div id="threeCanvas" class="absolute inset-0 pointer-events-none z-10"></div>
+
+                <div class="absolute top-4 left-4 z-20 bg-slate-900/80 p-3 rounded border border-slate-700 text-xs text-slate-300">
+                    <div>🏃 Yürüme: <b class="text-amber-400">WASD Tuşları</b></div>
+                    <div>👀 Bakış: <b class="text-cyan-400">Fare Hareketi</b></div>
+                    <div>🔭 Dürbün: <b class="text-red-400">Sağ Tık</b></div>
                 </div>
-                <div class="bg-slate-900 border border-slate-800 p-8 clip-valorant hover:border-[#ff4655] transition-all group">
-                    <div class="w-14 h-14 bg-[#ff4655]/10 border border-[#ff4655] text-[#ff4655] flex items-center justify-center text-2xl font-bold mb-6 clip-valorant group-hover:bg-[#ff4655] group-hover:text-white transition-colors">03</div>
-                    <h3 class="valorant-font text-2xl mb-3">Peek Teknikleri</h3>
-                    <p class="text-slate-400 text-sm leading-relaxed">Jiggle peek, wide swing ve doğru zamanlama.</p>
+
+                <div id="scoreDisplay" class="absolute top-4 right-4 z-20 bg-slate-900/90 px-4 py-2 rounded border border-slate-700 text-right">
+                    <div class="text-[10px] text-slate-400 uppercase">Toplam Skor</div>
+                    <div class="val-font text-3xl text-[#ff4655]" id="scoreVal">0</div>
                 </div>
             </div>
         </section>
 
-        <!-- NVIDIA RENK AYARLARI BÖLÜMÜ -->
-        <section id="nvidia" class="max-w-7xl mx-auto px-4 py-16 border-t border-slate-800/80">
-            <div class="text-center max-w-3xl mx-auto mb-12">
-                <div class="inline-block bg-[#76b900]/10 border border-[#76b900] text-[#76b900] px-3 py-1 text-xs font-bold uppercase tracking-widest mb-4 clip-valorant">
-                    NVIDIA Denetim Masası Optimizasyonu
+        <!-- LİDERLİK TABLOSU (LEADERBOARD) -->
+        <section id="leaderboard" class="bg-slate-900 border border-amber-500/50 p-6 clip-val">
+            <h2 class="val-font text-4xl text-amber-400 mb-2">EN YÜKSEK SKOR YAPANLAR <span class="text-white">(LİDERLİK TABLOSU)</span></h2>
+            <div class="space-y-2 text-xs">
+                <div class="bg-slate-950 p-3 rounded flex justify-between items-center border border-amber-500/30">
+                    <span class="font-bold text-amber-400">🥇 1. Whoops #3258 (👑 Immortal 3)</span>
+                    <span class="text-slate-300 font-bold">4,850 Puan</span>
                 </div>
-                <h2 class="valorant-font text-5xl tracking-wider text-white">RENK İYİLEŞTİRMELERİNİ UYGULA VE <span class="text-[#76b900]">DUVARLARI FARK ET</span></h2>
-                <p class="text-slate-400 mt-2">Kaydettiğiniz özel renk ayarları ile haritalardaki rakipleri net bir şekilde seçin[cite: 2].</p>
+                <div class="bg-slate-950 p-3 rounded flex justify-between items-center border border-slate-800">
+                    <span class="font-bold text-slate-300">🥈 2. VandalKing #0001 (🔥 Radiant)</span>
+                    <span class="text-slate-300 font-bold">3,920 Puan</span>
+                </div>
+                <div class="bg-slate-950 p-3 rounded flex justify-between items-center border border-slate-800">
+                    <span class="font-bold text-slate-300">🥉 3. AimGod #1337 (💎 Ascendant)</span>
+                    <span class="text-slate-300 font-bold">3,100 Puan</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- SOHBET & ARKADAŞ LİSTESİ -->
+        <section id="chat" class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- ARKADAŞ EKLEME VE YÖNETİMİ -->
+            <div class="bg-slate-900 border border-purple-500/50 p-5 clip-val flex flex-col justify-between">
+                <div>
+                    <h3 class="val-font text-2xl text-purple-400 mb-3"><i class="fas fa-user-plus mr-2"></i>ARKADAŞ EKLE</h3>
+                    <div class="flex gap-2 mb-4">
+                        <input type="text" id="friendInput" placeholder="Örn: Whoops #3258" class="flex-1 bg-slate-950 border border-slate-700 rounded px-3 py-2 text-xs text-white focus:outline-none">
+                        <button onclick="addFriend()" class="bg-purple-600 hover:bg-purple-500 text-white font-bold px-3 py-2 uppercase text-xs clip-btn cursor-pointer">Ekle</button>
+                    </div>
+                    <div id="friendListContainer" class="space-y-2 max-h-60 overflow-y-auto pr-1 text-xs">
+                        <!-- JS ile doldurulacak -->
+                    </div>
+                </div>
             </div>
 
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center max-w-5xl mx-auto bg-slate-900 border-2 border-slate-800 p-8 clip-valorant shadow-2xl">
-                <div class="space-y-3">
-                    <h3 class="valorant-font text-3xl text-white mb-2 border-b border-slate-800 pb-2">
-                        <i class="fas fa-sliders-h text-[#76b900] mr-2"></i> Çıkış Ayarları Değerleri
-                    </h3>
+            <!-- CANLI GENEL SOHBET -->
+            <div class="lg:col-span-2 bg-slate-900 border border-slate-800 p-5 clip-val flex flex-col justify-between">
+                <div>
+                    <h3 class="val-font text-2xl text-white mb-3"><i class="fas fa-comments text-[#ff4655] mr-2"></i>GENEL CANLI SOHBET</h3>
+                    <div id="chatMessages" class="bg-slate-950 h-52 rounded border border-slate-800 p-3 overflow-y-auto space-y-2 text-xs">
+                        <div class="bg-slate-900 p-2 rounded text-slate-300">Akademi canlı sohbetine hoş geldiniz!</div>
+                    </div>
+                </div>
+                <div class="flex gap-2 mt-3">
+                    <input type="text" id="chatInput" onkeypress="handleKeyPress(event)" placeholder="Mesajınızı yazın..." class="flex-1 bg-slate-950 border border-slate-700 rounded px-3 py-2 text-xs text-white focus:outline-none">
+                    <button onclick="sendMessage()" class="bg-[#ff4655] hover:bg-[#e03e4d] text-white font-bold px-5 py-2 uppercase text-xs clip-btn cursor-pointer">Gönder</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- ADMIN BAN PANELİ (ŞİFRE: whoopscs321) -->
+        <section id="admin" class="bg-slate-900 border border-red-500/50 p-6 clip-val">
+            <h2 class="val-font text-4xl text-red-500 mb-2">ADMİN BAN & SPECTATOR PANELİ</h2>
+            <div id="adminAuth">
+                <p class="text-xs text-slate-400 mb-2">Panel erişimi için yönetici şifresini girin:</p>
+                <div class="flex gap-2 max-w-md">
+                    <input type="password" id="adminPwd" placeholder="Admin Şifresi (whoopscs321)" class="flex-1 bg-slate-950 border border-slate-700 rounded px-3 py-1.5 text-xs text-white focus:outline-none">
+                    <button onclick="loginAdmin()" class="bg-red-600 hover:bg-red-500 text-white text-xs font-bold px-5 py-1.5 clip-btn cursor-pointer">Giriş Yap</button>
+                </div>
+            </div>
+
+            <div id="adminControls" class="hidden space-y-4 mt-4">
+                <div class="bg-emerald-500/20 border border-emerald-500 text-emerald-400 p-2 rounded text-xs font-bold">✓ Admin Yetkisi Aktif (Whoops)</div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <input type="text" id="banUserTarget" placeholder="Banlanacak Oyuncu ID / Adı" class="bg-slate-950 border border-slate-700 p-2 text-xs text-white rounded focus:outline-none">
+                    <select id="banTimeSelect" class="bg-slate-950 border border-slate-700 p-2 text-xs text-white rounded">
+                        <option value="60">1 Dakika Ban (Test)</option>
+                        <option value="3600">1 Saat Ban</option>
+                        <option value="86400">1 Gün Ban</option>
+                        <option value="315360000">Kalıcı / Permanent Ban</option>
+                    </select>
+                    <button onclick="applyBan()" class="bg-red-600 hover:bg-red-500 text-white font-bold text-xs clip-btn cursor-pointer">Süreli HWID Ban At</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- KATEGORİLER (NVIDIA & DERSLER) -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <section id="nvidia" class="bg-slate-900 border border-slate-800 p-5 clip-val">
+                <h3 class="val-font text-2xl text-[#76b900] mb-2">NVIDIA RENK AYARLARI</h3>
+                <p class="text-xs text-slate-400">Digital Vibrance: %100 | Brightness: %57</p>
+                <div class="bg-slate-950 p-2 rounded text-[11px] text-slate-300 mt-2">Düşman anahatlarının parlamasını sağlar.</div>
+            </section>
+            <section id="about" class="bg-slate-900 border border-slate-800 p-5 clip-val">
+                <h3 class="val-font text-2xl text-white mb-2">HAKKIMIZDA & İLETİŞİM</h3>
+                <p class="text-xs text-slate-400 leading-relaxed">
+                    Valorant Aim Akademi, e-spor odaklı antrenman merkezi ve sosyal topluluk platformudur.
+                </p>
+            </section>
+        </div>
+
+    </div>
+
+    <!-- JAVASCRIPT KODLARI -->
+    <script>
+        let registeredUsers = ['Whoops #3258', 'VandalKing #0001', 'AimGod #1337'];
+        let generatedSmsCode = '';
+
+        function checkPasswordStrength(pass) {
+            const bar = document.getElementById('passStrengthBar');
+            const txt = document.getElementById('passStrengthText');
+            if (pass.length === 0) {
+                bar.style.width = '0%';
+                txt.innerText = 'Güçlük: -';
+            } else if (pass.length < 6) {
+                bar.style.width = '33%';
+                bar.className = 'h-full bg-red-500 transition-all';
+                txt.innerText = 'Zayıf';
+                txt.className = 'text-[9px] text-red-400 font-bold';
+            } else if (pass.length < 10) {
+                bar.style.width = '66%';
+                bar.className = 'h-full bg-yellow-500 transition-all';
+                txt.innerText = 'Orta';
+                txt.className = 'text-[9px] text-yellow-400 font-bold';
+            } else {
+                bar.style.width = '100%';
+                bar.className = 'h-full bg-emerald-500 transition-all';
+                txt.innerText = 'Güçlü';
+                txt.className = 'text-[9px] text-emerald-400 font-bold';
+            }
+        }
+
+        function checkBanStatus() {
+            const banUntil = localStorage.getItem('val_ban_until');
+            if (banUntil) {
+                const now = Math.floor(Date.now() / 1000);
+                if (now < parseInt(banUntil)) {
+                    document.getElementById('banModal').classList.remove('hidden');
+                    const rem = parseInt(banUntil) - now;
+                    document.getElementById('banTimer').innerText = `Kalan Ceza Süresi: ${rem} Saniye`;
+                    setTimeout(checkBanStatus, 1000);
+                    return true;
+                } else {
+                    localStorage.removeItem('val_ban_until');
+                    document.getElementById('banModal').classList.add('hidden');
+                }
+            }
+            return false;
+        }
+
+        function handleLogin(e) {
+            e.preventDefault();
+            if (checkBanStatus()) return;
+
+            const u = document.getElementById('userInput').value.trim();
+            const r = document.getElementById('rankInput').value;
+
+            if (registeredUsers.includes(u) && localStorage.getItem('val_user') !== u) {
+                alert('Bu kullanıcı adı başka bir oyuncu tarafından kullanılıyor! Lütfen farklı bir ad girin.');
+                return;
+            }
+
+            registeredUsers.push(u);
+            localStorage.setItem('val_user', u);
+            localStorage.setItem('val_rank', r);
+
+            document.getElementById('authModal').classList.add('hidden');
+            document.getElementById('mainContent').classList.remove('bg-blur-lock');
+
+            const header = document.getElementById('userHeader');
+            const dot = document.getElementById('statusDot');
+            header.innerText = `● Çevrimiçi: ${u}`;
+            header.className = "text-emerald-400";
+            dot.className = "w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse";
+        }
+
+        function loginAsGuest() {
+            if (checkBanStatus()) return;
+            localStorage.setItem('val_user', 'Misafir Oyuncu');
+            localStorage.setItem('val_rank', 'Misafir');
+
+            document.getElementById('authModal').classList.add('hidden');
+            document.getElementById('mainContent').classList.remove('bg-blur-lock');
+
+            const header = document.getElementById('userHeader');
+            const dot = document.getElementById('statusDot');
+            header.innerText = `● Çevrimiçi: Misafir`;
+            header.className = "text-emerald-400";
+            dot.className = "w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse";
+        }
+
+        // SMS ŞİFRE SIFIRLAMA
+        function showResetPasswordModal() {
+            document.getElementById('authFormContainer').classList.add('hidden');
+            document.getElementById('resetPasswordContainer').classList.remove('hidden');
+        }
+
+        function hideResetPasswordModal() {
+            document.getElementById('resetPasswordContainer').classList.add('hidden');
+            document.getElementById('authFormContainer').classList.remove('hidden');
+        }
+
+        function sendSmsCode() {
+            const phone = document.getElementById('resetPhone').value.trim();
+            if (!phone) {
+                alert('Lütfen geçerli bir telefon numarası girin!');
+                return;
+            }
+            generatedSmsCode = Math.floor(100000 + Math.random() * 900000).toString();
+            document.getElementById('generatedCodeDisplay').innerText = generatedSmsCode;
+            document.getElementById('smsStep1').classList.add('hidden');
+            document.getElementById('smsStep2').classList.remove('hidden');
+        }
+
+        function verifyAndResetPassword() {
+            const inputCode = document.getElementById('smsCodeInput').value.trim();
+            const newPass = document.getElementById('newPasswordInput').value.trim();
+
+            if (inputCode === generatedSmsCode) {
+                if (!newPass) return alert('Yeni şifrenizi yazın!');
+                alert('Şifreniz başarıyla sıfırlandı! Yeni şifrenizle giriş yapabilirsiniz.');
+                hideResetPasswordModal();
+            } else {
+                alert('Hatalı SMS Doğrulama Kodu!');
+            }
+        }
+
+        // ARKADAŞ LİSTESİ VE SOHBET
+        let friendsList = [{ id: 'Whoops #3258', rank: 'Immortal 3', status: 'online' }];
+
+        function renderFriends() {
+            const container = document.getElementById('friendListContainer');
+            container.innerHTML = '';
+            friendsList.forEach((f) => {
+                container.innerHTML += `
+                    <div class="bg-slate-950 p-2.5 rounded flex justify-between items-center border border-slate-800">
+                        <div>
+                            <span class="font-bold text-white">${f.id}</span>
+                            <span class="text-[10px] text-emerald-400 block">● Çevrimiçi</span>
+                        </div>
+                        <button onclick="alert('[PROFİL GÖRÜNTÜLE]\\nOyuncu: ${f.id}\\nRank: ${f.rank}\\nDurum: Aktif')" class="bg-purple-600 hover:bg-purple-500 text-white px-2.5 py-1 rounded text-[10px] clip-btn cursor-pointer">Profili Görüntüle</button>
+                    </div>
+                `;
+            });
+        }
+
+        function addFriend() {
+            const val = document.getElementById('friendInput').value.trim();
+            if (!val) return;
+            friendsList.push({ id: val, rank: 'Radiant', status: 'online' });
+            renderFriends();
+            document.getElementById('friendInput').value = '';
+        }
+
+        function sendMessage() {
+            const txt = document.getElementById('chatInput').value.trim();
+            if (!txt) return;
+            const user = localStorage.getItem('val_user') || 'Oyuncu';
+            const box = document.getElementById('chatMessages');
+            box.innerHTML += `<div class="bg-slate-900 p-2 rounded text-slate-300"><b>${user}:</b> ${txt}</div>`;
+            document.getElementById('chatInput').value = '';
+            box.scrollTop = box.scrollHeight;
+        }
+
+        function handleKeyPress(e) { if (e.key === 'Enter') sendMessage(); }
+
+        function loginAdmin() {
+            if (document.getElementById('adminPwd').value === 'whoopscs321') {
+                document.getElementById('adminAuth').classList.add('hidden');
+                document.getElementById('adminControls').classList.remove('hidden');
+            } else {
+                alert('Hatalı Admin Şifresi!');
+            }
+        }
+
+        function applyBan() {
+            const target = document.getElementById('banUserTarget').value.trim();
+            if (!target) return alert('Oyuncu adı girin!');
+            const sec = parseInt(document.getElementById('banTimeSelect').value);
+            const until = Math.floor(Date.now() / 1000) + sec;
+            localStorage.setItem('val_ban_until', until);
+            alert(`"${target}" adlı oyuncu banlandı! Cihaz kilitlendi.`);
+            checkBanStatus();
+        }
+
+        // THREE.JS 3D POLİGON
+        let scene, camera, renderer, gun;
+        function init3D() {
+            const container = document.getElementById('threeCanvas');
+            if (!container) return;
+
+            scene = new THREE.Scene();
+            camera = new THREE.PerspectiveCamera(50, container.clientWidth / container.clientHeight, 0.1, 1000);
+            camera.position.set(0, 0, 5);
+
+            renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+            renderer.setSize(container.clientWidth, container.clientHeight);
+            container.appendChild(renderer.domElement);
+
+            scene.add(new THREE.AmbientLight(0xffffff, 1.2));
+
+            const gunGeo = new THREE.BoxGeometry(1.6, 0.25, 0.2);
+            const gunMat = new THREE.MeshStandardMaterial({ color: 0x3b0764 });
+            gun = new THREE.Mesh(gunGeo, gunMat);
+            gun.position.set(1, -1, 2);
+            scene.add(gun);
+
+            function render() {
+                requestAnimationFrame(render);
+                renderer.render(scene, camera);
+            }
+            render();
+        }
+
+        function handleLook(e) {
+            if(!gun) return;
+            const arena = document.getElementById('gameArena');
+            const rect = arena.getBoundingClientRect();
+            const relX = ((e.clientX - rect.left) / arena.clientWidth) - 0.5;
+            gun.rotation.y = -0.3 + (relX * 0.6);
+        }
+
+        window.addEventListener('keydown', (e) => {
+            if(!camera) return;
+            const k = e.key.toLowerCase();
+            if(k==='w') camera.position.z -= 0.15;
+            if(k==='s') camera.position.z += 0.15;
+            if(k==='a') camera.position.x -= 0.15;
+            if(k==='d') camera.position.x += 0.15;
+        });
+
+        function toggleBuyMenu() { document.getElementById('buyMenu').classList.toggle('hidden'); }
+        function selectGun(g) { toggleBuyMenu(); alert(`${g.toUpperCase()} Kuşanıldı!`); }
+        function toggleScope(e) { e.preventDefault(); document.getElementById('scopeOverlay').classList.toggle('hidden'); }
+        function toggleFullscreen() { document.getElementById('gameArena').requestFullscreen(); }
+
+        let score = 0;
+        function startTraining() {
+            score += 100;
+            document.getElementById('scoreVal').innerText = score;
+        }
+
+        window.onload = () => {
+            checkBanStatus();
+            renderFriends();
+            init3D();
+        };
+    </script>
+</body>
+</html>
